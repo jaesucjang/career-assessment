@@ -800,6 +800,25 @@ body {
   .intro-title { font-size: 24px; }
 }
 
+/* ─── Disclaimer Box ─── */
+.disclaimer-box {
+  background: #FFF8E1;
+  border: 2px solid #FFD54F;
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin: 20px 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #5D4037;
+}
+
+.disclaimer-box p { margin-bottom: 6px; }
+.disclaimer-box p:last-child { margin-bottom: 0; }
+.disclaimer-box b { color: #E65100; }
+
+.disclaimer-result { margin-top: 24px; }
+.disclaimer-complete { margin: 20px 0 10px; }
+
 @media (min-width: 481px) {
   .app-container { padding: 24px; }
 }
