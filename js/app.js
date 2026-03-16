@@ -1,8 +1,10 @@
-// 메인 앱 컨트롤러
+// ═══ 메인 앱 컨트롤러 V2 ═══
 const App = {
   currentQuestion: 0,
   answers: new Array(QUESTIONS.length).fill(0),
   results: [],
+  allScores: [],
+  personality: null,
   selections: { first: '', second: '', third: '' },
 
   init() {
@@ -11,7 +13,6 @@ const App = {
   },
 
   bindEvents() {
-    // 시작 버튼
     document.getElementById('btn-start').addEventListener('click', () => {
       this.currentQuestion = 0;
       this.answers.fill(0);
@@ -19,27 +20,22 @@ const App = {
       this.renderQuestion();
     });
 
-    // 이전/다음 버튼
     document.getElementById('btn-prev').addEventListener('click', () => this.prevQuestion());
     document.getElementById('btn-next').addEventListener('click', () => this.nextQuestion());
 
-    // 결과에서 선택으로
     document.getElementById('btn-to-selection').addEventListener('click', () => {
       this.showSection('selection');
       this.renderSelection();
     });
 
-    // 가이드 팝업
     document.getElementById('btn-guide').addEventListener('click', () => this.showGuide());
     document.getElementById('guide-close').addEventListener('click', () => this.hideGuide());
     document.getElementById('guide-overlay').addEventListener('click', (e) => {
       if (e.target === e.currentTarget) this.hideGuide();
     });
 
-    // 제출
     document.getElementById('btn-submit').addEventListener('click', () => this.submitSelection());
 
-    // 다시하기
     document.getElementById('btn-restart').addEventListener('click', () => {
       this.currentQuestion = 0;
       this.answers.fill(0);
@@ -50,11 +46,9 @@ const App = {
 
   showSection(id) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    const section = document.getElementById(id);
-    section.classList.add('active');
+    document.getElementById(id).classList.add('active');
     window.scrollTo(0, 0);
-
-    if (id === 'result') {
+    if (id === 'result' || id === 'complete') {
       setTimeout(() => this.launchConfetti(), 300);
     }
   },
@@ -64,29 +58,22 @@ const App = {
     const q = QUESTIONS[this.currentQuestion];
     const total = QUESTIONS.length;
 
-    // 프로그레스
     document.getElementById('progress-fill').style.width = `${((this.currentQuestion + 1) / total) * 100}%`;
     document.getElementById('progress-text').textContent = `${this.currentQuestion + 1} / ${total}`;
-
-    // 영역 표시
     document.getElementById('question-area').textContent = q.area;
 
-    // 문항
     const card = document.getElementById('question-card');
     card.classList.remove('slide-in');
-    void card.offsetWidth; // reflow
+    void card.offsetWidth;
     card.classList.add('slide-in');
 
     document.getElementById('question-emoji').textContent = q.emoji;
     document.getElementById('question-text').textContent = q.text;
-
-    // 이모지 버튼 상태
     this.renderLikert();
 
-    // 네비게이션 상태
     document.getElementById('btn-prev').disabled = this.currentQuestion === 0;
     const btnNext = document.getElementById('btn-next');
-    btnNext.textContent = this.currentQuestion === total - 1 ? '결과 보기' : '다음';
+    btnNext.textContent = this.currentQuestion === total - 1 ? '결과 보기 ✨' : '다음';
     btnNext.disabled = this.answers[this.currentQuestion] === 0;
   },
 
@@ -109,13 +96,11 @@ const App = {
     `).join('');
 
     container.querySelectorAll('.likert-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', () => {
         const score = parseInt(btn.dataset.score);
         this.answers[this.currentQuestion] = score;
         this.renderLikert();
         document.getElementById('btn-next').disabled = false;
-
-        // 자동 다음 (0.4초 후)
         btn.classList.add('bounce');
         setTimeout(() => {
           if (this.currentQuestion < QUESTIONS.length - 1) {
@@ -135,13 +120,14 @@ const App = {
 
   nextQuestion() {
     if (this.answers[this.currentQuestion] === 0) return;
-
     if (this.currentQuestion < QUESTIONS.length - 1) {
       this.currentQuestion++;
       this.renderQuestion();
     } else {
-      // 결과 계산
-      this.results = getTopMajors(this.answers, 3);
+      const { results, allScores } = getTopMajors(this.answers, 3);
+      this.results = results;
+      this.allScores = allScores;
+      this.personality = buildPersonalityText(this.answers);
       this.showSection('result');
       this.renderResults();
     }
@@ -149,26 +135,88 @@ const App = {
 
   // ─── 결과 ───
   renderResults() {
+    // 성격 프로파일
+    const profileEl = document.getElementById('personality-profile');
+    const p = this.personality;
+    profileEl.innerHTML = `
+      <div class="profile-summary">${p.summary}</div>
+      <div class="profile-detail">${p.detail}</div>
+    `;
+
+    // 상위 3개 결과 카드
     const container = document.getElementById('result-cards');
-    const maxScore = getMaxPossibleScore();
     const rankLabels = ['1지망 추천', '2지망 추천', '3지망 추천'];
     const rankColors = ['#FF9AA2', '#FFB7B2', '#FFDAC1'];
 
     container.innerHTML = this.results.map((r, i) => `
       <div class="result-card" style="animation-delay: ${i * 0.2}s; border-left: 5px solid ${rankColors[i]}">
         <div class="result-rank" style="background: ${rankColors[i]}">${rankLabels[i]}</div>
+        <div class="result-score-badge">${r.score}<span class="score-unit">점</span></div>
         <div class="result-emoji">${r.emoji}</div>
         <div class="result-name">${r.name}</div>
         <div class="result-desc">${r.desc}</div>
         <div class="result-bar-wrap">
-          <div class="result-bar" style="width: ${Math.min((r.score / maxScore) * 100, 100)}%; background: ${rankColors[i]}"></div>
+          <div class="result-bar" style="width: ${r.score}%; background: ${rankColors[i]}"></div>
         </div>
         <div class="result-reason">${r.reason}</div>
       </div>
     `).join('');
 
+    // 전체 계열 점수 랭킹
+    this.renderScoreBoard();
+
+    // 교차 검증 메시지
+    this.renderCrossCheck();
+
     // 예체능 안내
     document.getElementById('arts-notice').style.display = 'block';
+  },
+
+  renderScoreBoard() {
+    const board = document.getElementById('score-board');
+    const topN = this.allScores.slice(0, 10); // 상위 10개만
+
+    board.innerHTML = `
+      <div class="board-title">전체 계열 적합도 TOP 10</div>
+      <div class="board-list">
+        ${topN.map((s, i) => {
+          const major = MAJORS.find(m => m.name === s.name);
+          const isTop3 = i < 3;
+          return `
+            <div class="board-row ${isTop3 ? 'board-highlight' : ''}">
+              <span class="board-rank">${i + 1}</span>
+              <span class="board-emoji">${major ? major.emoji : '📋'}</span>
+              <span class="board-name">${s.name}</span>
+              <span class="board-score">${s.score}점</span>
+              <div class="board-bar-wrap">
+                <div class="board-bar" style="width: ${s.score}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  },
+
+  renderCrossCheck() {
+    const topNames = this.results.map(r => r.name);
+    const messages = getCrossCheckMessages(this.answers, topNames);
+    const el = document.getElementById('cross-check');
+
+    if (messages.length > 0) {
+      el.style.display = 'block';
+      el.innerHTML = `
+        <div class="cross-title">💭 한 가지 더 생각해볼 점</div>
+        ${messages.map(m => `
+          <div class="cross-msg">
+            <span class="cross-major">${m.major}</span>
+            <span>${m.msg}</span>
+          </div>
+        `).join('')}
+      `;
+    } else {
+      el.style.display = 'none';
+    }
   },
 
   // ─── 가이드 ───
@@ -186,16 +234,9 @@ const App = {
 
   // ─── 선택 ───
   renderSelection() {
-    // 추천 결과를 기본값으로 세팅
-    if (!this.selections.first && this.results[0]) {
-      this.selections.first = this.results[0].name;
-    }
-    if (!this.selections.second && this.results[1]) {
-      this.selections.second = this.results[1].name;
-    }
-    if (!this.selections.third && this.results[2]) {
-      this.selections.third = this.results[2].name;
-    }
+    if (!this.selections.first && this.results[0]) this.selections.first = this.results[0].name;
+    if (!this.selections.second && this.results[1]) this.selections.second = this.results[1].name;
+    if (!this.selections.third && this.results[2]) this.selections.third = this.results[2].name;
 
     const selects = ['select-1st', 'select-2nd', 'select-3rd'];
     const keys = ['first', 'second', 'third'];
@@ -204,7 +245,6 @@ const App = {
       const select = document.getElementById(id);
       select.innerHTML = '<option value="">-- 선택해주세요 --</option>' +
         MAJORS.map(m => `<option value="${m.name}" ${this.selections[keys[i]] === m.name ? 'selected' : ''}>${m.emoji} ${m.name}</option>`).join('');
-
       select.addEventListener('change', (e) => {
         this.selections[keys[i]] = e.target.value;
         this.validateSelection();
@@ -216,10 +256,8 @@ const App = {
 
   validateSelection() {
     const { first, second, third } = this.selections;
-    const btn = document.getElementById('btn-submit');
-    btn.disabled = !first || !second || !third;
+    document.getElementById('btn-submit').disabled = !first || !second || !third;
 
-    // 중복 경고
     const warn = document.getElementById('duplicate-warn');
     if (first && second && third) {
       const set = new Set([first, second, third]);
@@ -238,10 +276,15 @@ const App = {
     const { first, second, third } = this.selections;
     if (!first || !second || !third) return;
 
-    // 확인 팝업
     const m1 = MAJORS.find(m => m.name === first);
     const m2 = MAJORS.find(m => m.name === second);
     const m3 = MAJORS.find(m => m.name === third);
+
+    // 선택한 계열의 점수 찾기
+    const findScore = (name) => {
+      const found = this.allScores.find(s => s.name === name);
+      return found ? found.score : '-';
+    };
 
     const msg = `이렇게 선택할까요?\n\n` +
       `1지망: ${m1?.emoji || ''} ${first}\n` +
@@ -251,9 +294,21 @@ const App = {
     if (confirm(msg)) {
       this.showSection('complete');
       document.getElementById('complete-summary').innerHTML = `
-        <div class="complete-item"><span class="complete-rank">1지망</span> ${m1?.emoji || ''} ${first}</div>
-        <div class="complete-item"><span class="complete-rank">2지망</span> ${m2?.emoji || ''} ${second}</div>
-        <div class="complete-item"><span class="complete-rank">3지망</span> ${m3?.emoji || ''} ${third}</div>
+        <div class="complete-item">
+          <span class="complete-rank">1지망</span>
+          <span class="complete-major">${m1?.emoji || ''} ${first}</span>
+          <span class="complete-score">${findScore(first)}점</span>
+        </div>
+        <div class="complete-item">
+          <span class="complete-rank">2지망</span>
+          <span class="complete-major">${m2?.emoji || ''} ${second}</span>
+          <span class="complete-score">${findScore(second)}점</span>
+        </div>
+        <div class="complete-item">
+          <span class="complete-rank">3지망</span>
+          <span class="complete-major">${m3?.emoji || ''} ${third}</span>
+          <span class="complete-score">${findScore(third)}점</span>
+        </div>
       `;
       this.launchConfetti();
     }
@@ -263,14 +318,13 @@ const App = {
   launchConfetti() {
     const container = document.getElementById('confetti');
     container.innerHTML = '';
-    const colors = ['#FF9AA2', '#FFB7B2', '#FFDAC1', '#B5EAD7', '#C7CEEA', '#E2F0CB', '#FFDFD3'];
-    const emojis = ['🎉', '🎊', '✨', '💫', '🌟', '⭐', '🎈'];
+    const colors = ['#FF9AA2','#FFB7B2','#FFDAC1','#B5EAD7','#C7CEEA','#E2F0CB','#FFDFD3'];
+    const emojis = ['🎉','🎊','✨','💫','🌟','⭐','🎈'];
 
     for (let i = 0; i < 40; i++) {
       const piece = document.createElement('div');
       piece.className = 'confetti-piece';
-      const isEmoji = Math.random() > 0.5;
-      if (isEmoji) {
+      if (Math.random() > 0.5) {
         piece.textContent = emojis[Math.floor(Math.random() * emojis.length)];
         piece.style.fontSize = (12 + Math.random() * 16) + 'px';
       } else {
@@ -284,10 +338,8 @@ const App = {
       piece.style.animationDuration = (2 + Math.random() * 3) + 's';
       container.appendChild(piece);
     }
-
     setTimeout(() => { container.innerHTML = ''; }, 5000);
   },
 };
 
-// 시작
 document.addEventListener('DOMContentLoaded', () => App.init());

@@ -400,6 +400,179 @@ body {
   margin-top: 20px;
 }
 
+/* ─── Personality Profile ─── */
+.personality-card {
+  background: linear-gradient(135deg, #fff0f1, #f0e8ff);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.profile-summary {
+  font-family: 'Jua', sans-serif;
+  font-size: 20px;
+  color: var(--text);
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.profile-detail {
+  font-size: 14px;
+  color: var(--text-light);
+  line-height: 1.7;
+}
+
+/* ─── Score Badge ─── */
+.result-score-badge {
+  text-align: center;
+  font-family: 'Jua', sans-serif;
+  font-size: 36px;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.result-score-badge .score-unit {
+  font-size: 16px;
+  color: var(--text-light);
+  margin-left: 2px;
+}
+
+/* ─── Score Board ─── */
+.score-board {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+
+.board-title {
+  font-family: 'Jua', sans-serif;
+  font-size: 16px;
+  text-align: center;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.board-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.board-row {
+  display: grid;
+  grid-template-columns: 24px 24px 1fr 44px;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  transition: background 0.2s;
+}
+
+.board-row.board-highlight {
+  background: #FFF8F0;
+}
+
+.board-rank {
+  font-family: 'Jua', sans-serif;
+  font-size: 14px;
+  color: var(--primary);
+  text-align: center;
+}
+
+.board-highlight .board-rank {
+  color: #e74c3c;
+}
+
+.board-emoji {
+  font-size: 16px;
+}
+
+.board-name {
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.board-score {
+  font-family: 'Jua', sans-serif;
+  font-size: 14px;
+  color: var(--primary);
+  text-align: right;
+}
+
+.board-bar-wrap {
+  grid-column: 1 / -1;
+  height: 4px;
+  background: #f0e6d6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.board-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  border-radius: 4px;
+  transition: width 0.8s ease;
+}
+
+/* ─── Cross Check ─── */
+.cross-check {
+  display: none;
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+  border-left: 5px solid var(--info);
+}
+
+.cross-title {
+  font-family: 'Jua', sans-serif;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+.cross-msg {
+  font-size: 13px;
+  color: var(--text-light);
+  line-height: 1.6;
+  padding: 8px 0;
+}
+
+.cross-msg + .cross-msg {
+  border-top: 1px solid #f0e6d6;
+}
+
+.cross-major {
+  display: inline-block;
+  background: var(--info);
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+/* ─── Complete Score ─── */
+.complete-major {
+  flex: 1;
+  text-align: left;
+}
+
+.complete-score {
+  font-family: 'Jua', sans-serif;
+  color: var(--primary);
+  font-size: 15px;
+  white-space: nowrap;
+}
+
 /* ─── Guide Popup ─── */
 .guide-overlay {
   position: fixed;

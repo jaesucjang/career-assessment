@@ -23,15 +23,19 @@
         <div class="intro-features">
           <div class="feature-chip">
             <span class="chip-emoji">⏱️</span>
-            <span>21개 질문, 약 3분이면 끝!</span>
+            <span>30개 질문, 약 5분이면 끝!</span>
+          </div>
+          <div class="feature-chip">
+            <span class="chip-emoji">🧠</span>
+            <span>5가지 차원으로 나의 적성을 입체 분석</span>
           </div>
           <div class="feature-chip">
             <span class="chip-emoji">🎯</span>
-            <span>AI가 분석해서 딱 맞는 계열 3개 추천</span>
+            <span>점수와 함께 딱 맞는 계열 3개 추천</span>
           </div>
           <div class="feature-chip">
             <span class="chip-emoji">✅</span>
-            <span>추천 결과를 참고해서 직접 1·2·3지망 선택</span>
+            <span>추천을 참고해서 직접 1·2·3지망 선택</span>
           </div>
         </div>
 
@@ -45,7 +49,7 @@
         <div class="progress-bar">
           <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
         </div>
-        <div id="progress-text" class="progress-text">1 / 21</div>
+        <div id="progress-text" class="progress-text">1 / 30</div>
       </div>
 
       <div id="question-area" class="question-area"></div>
@@ -70,7 +74,17 @@
         <p>나에게 맞는 전공 계열은...</p>
       </div>
 
+      <!-- 성격 프로파일 -->
+      <div id="personality-profile" class="personality-card"></div>
+
+      <!-- 추천 카드 -->
       <div id="result-cards"></div>
+
+      <!-- 전체 점수 보드 -->
+      <div id="score-board" class="score-board"></div>
+
+      <!-- 교차 검증 메시지 -->
+      <div id="cross-check" class="cross-check"></div>
 
       <div id="arts-notice" class="arts-notice">
         🎨 미술, 음악, 체육, 디자인에 관심이 있다면<br><b>예체능계열</b>도 고려해보세요!
